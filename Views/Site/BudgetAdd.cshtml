@@ -1,0 +1,154 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+@model Budget.Controllers.BudgetAddViewModel
+
+@{
+    ViewData["Title"] = "Создание бюджета";
+}
+<style>
+    input[type=checkbox]{
+        display:none;
+    }
+    .glyphicon-unchecked{
+        color:gray;
+    }
+    .glyphicon-ok{
+        color:green;
+    }
+</style>
+
+<form asp-controller="Site" asp-action="BudgetAdd" asp-route-id="@Model.Id" method="post" role="form">
+    <div class="col-md-5">
+        @if (Model.Errors.ContainsKey("All"))
+        {
+            @:
+            <h3 class="text-danger">@Model.Errors["All"]</h3>
+        }
+        <h2>Название бюджета:</h2>
+        <input type="text" class="form-control" id="Name" name="Name" value="@Model.Name" maxlength="70">
+        @if (Model.Errors.ContainsKey("Name"))
+        {
+            @:
+            <p class="text-danger">@Model.Errors["Name"]</p>
+        }
+        <hr />
+        <h2>Сумма:</h2>
+        <input type="text" class="form-control" id="Sum" name="Sum" value="@Model.Sum">
+        @if (Model.Errors.ContainsKey("Sum"))
+        {
+            @:
+            <p class="text-danger">@Model.Errors["Sum"]</p>
+        }
+        <hr />
+        <button type="submit" class="btn btn-default btn-lg">Сохранить</button>
+    </div>
+    <div class="col-md-7">
+        <h2>Выберите категории</h2>
+        <ul id="tree">
+            @Structure_Maker((dynamic)ViewBag.Dict, "", ViewBag.Parrent, 0)
+        </ul>
+    </div>
+     
+</form>
+@functions{
+
+    int max_levels = 2;
+    int max_elements = 100;
+
+    private HtmlString Structure_Maker(Dictionary<string, object> _structure, string _parent, string _address, int _level)
+    {
+        StringBuilder sb = new StringBuilder();
+        var structure = _structure.OrderBy(items => items.Key);
+        _level++;
+        int counter = 0;
+        foreach (var item in structure)
+        {
+            if (_level > max_levels || counter >= max_elements) break;
+            counter++;
+            int elements = (item.Value as Dictionary<string, object>).Count;
+            string parent = "";
+            string checked_ = "";
+            string glyphicon = "glyphicon-unchecked";
+            if (_level == 1) parent = item.Key;
+            else parent = _parent;
+            string address = $"{_address}.{item.Key}";
+            //{item.Key} {parent} {address}
+            if (_level != 2)
+            {
+                if (Model.Categories != null && Model.Categories.Contains(item.Key)) { checked_ = "checked"; glyphicon = "glyphicon-ok"; }
+                sb.Append($"<li><input name='Categories' value='{item.Key}' id='{item.Key}' type='checkbox' {checked_}><span class='glyphicon {glyphicon} for_checkbox'></span> {item.Key}");
+            }
+            else
+            {
+                if (Model.Categories != null && Model.Categories.Contains($"{parent}.{item.Key}")) { checked_ = "checked"; glyphicon = "glyphicon-ok"; }
+                sb.Append($"<li><input name='Categories' value='{parent}.{item.Key}' id='{parent}.{item.Key}' type='checkbox' {checked_}><span class='glyphicon {glyphicon} for_checkbox'></span> {item.Key}");
+            }
+            if (_level < max_levels && elements > 0)
+            {
+                sb.Append("<ul>");
+                if (elements > 0) sb.Append(Structure_Maker((dynamic)item.Value, parent, address, _level));
+                sb.Append("</ul>");
+            }
+
+            sb.Append("</li>");
+        }
+
+        return new HtmlString(sb.ToString());
+    }
+    }
+
+    @section Scripts
+    {
+    <script>
+        $.fn.extend({
+        treed: function (o) {
+                var openedClass = 'glyphicon-minus-sign';
+                var closedClass = 'glyphicon-plus-sign';
+                if (typeof o != 'undefined') {
+                    if (typeof o.openedClass != 'undefined') {
+                        openedClass = o.openedClass;
+                    }
+                    if (typeof o.closedClass != 'undefined') {
+                        closedClass = o.closedClass;
+                    }
+                };
+                //initialize each of the top levels
+                var tree = $(this);
+                tree.addClass("tree");
+                tree.find('li').has("ul").each(function () {
+                    var branch = $(this); //li with children ul
+                    branch.prepend("<i class='indicator glyphicon " + closedClass + "'></i> ");
+                    branch.addClass('branch');
+                    branch.on('click', function (e) {
+                        if (this == e.target) {
+                            var icon = $(this).children('i:first');
+                            icon.toggleClass(openedClass + " " + closedClass);
+                            $(this).children().children().toggle();
+                        }
+                    })
+                    branch.children().children().toggle();
+                });
+                //fire event from the dynamically added icon
+                tree.find('.branch .indicator').each(function () {
+                    $(this).on('click', function () {
+                        $(this).closest('li').click();
+                    });
+                });
+                //Раскрываем ветви, если есть галочки на втором уровне
+                tree.find('ul').has("input:checkbox:checked").each(function () {
+                    $(this).closest('li').click();
+                });
+            }
+        });
+        //Initialization of treeviews
+        $('#tree').treed();
+        //Переключатель псевдо-чекбоксов
+        $('.for_checkbox').click(function () {
+            $(this).toggleClass('glyphicon-unchecked glyphicon-ok');
+            $(this).prev().click();
+        });
+    </script>
+}
+
+

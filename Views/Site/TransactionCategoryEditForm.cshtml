@@ -1,0 +1,127 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="ModalLabel">Выберите категорию</h4>
+        </div>
+        <div class="modal-body">
+
+            <ul id="tree">
+                @Structure_Maker((dynamic)ViewBag.Dict, "", ViewBag.Parrent, 0)
+            </ul>
+
+        </div>
+    </div>
+</div>
+
+@functions{
+    int max_levels = 2;
+    int max_elements = 100;
+
+    private HtmlString Structure_Maker(Dictionary<string, object> _structure, string _parent, string _address, int _level)
+    {
+        StringBuilder sb = new StringBuilder();
+        var structure = _structure.OrderBy(items => items.Key);
+        _level++;
+        int counter = 0;
+        foreach (var item in structure)
+        {
+            if (_level > max_levels || counter >= max_elements) break;
+            counter++;
+            int elements = (item.Value as Dictionary<string, object>).Count;
+            string parent = "";
+            if (_level == 1) parent = item.Key;
+            else parent = _parent;
+            string address = $"{_address}.{item.Key}";
+            //{item.Key} {parent} {address}
+            sb.Append($"<li><a class='category' data-dismiss='modal' data-category='{parent}' data-subcategory='{item.Key}' href='#'>{item.Key}</a>");
+
+            if (_level < max_levels && elements > 0)
+            {
+                sb.Append("<ul>");
+                if (elements > 0) sb.Append(Structure_Maker((dynamic)item.Value, parent, address, _level));
+                sb.Append("</ul>");
+            }
+
+            sb.Append("</li>");
+        }
+
+        return new HtmlString(sb.ToString());
+    }
+}
+
+<script>
+    $.fn.extend({
+        treed: function (o) {
+
+            var openedClass = 'glyphicon-minus-sign';
+            var closedClass = 'glyphicon-plus-sign';
+
+            if (typeof o != 'undefined') {
+                if (typeof o.openedClass != 'undefined') {
+                    openedClass = o.openedClass;
+                }
+                if (typeof o.closedClass != 'undefined') {
+                    closedClass = o.closedClass;
+                }
+            };
+
+            //initialize each of the top levels
+            var tree = $(this);
+            tree.addClass("tree");
+            tree.find('li').has("ul").each(function () {
+                var branch = $(this); //li with children ul
+                branch.prepend("<i class='indicator glyphicon " + closedClass + "'></i> ");
+                branch.addClass('branch');
+                branch.on('click', function (e) {
+                    if (this == e.target) {
+                        var icon = $(this).children('i:first');
+                        icon.toggleClass(openedClass + " " + closedClass);
+                        $(this).children().children().toggle();
+                    }
+                })
+                branch.children().children().toggle();
+            });
+            //fire event from the dynamically added icon
+            tree.find('.branch .indicator').each(function () {
+                $(this).on('click', function () {
+                    $(this).closest('li').click();
+                });
+            });
+            ////fire event to open branch if the li contains an anchor instead of text
+            //tree.find('.branch>a').each(function () {
+            //    $(this).on('click', function (e) {
+            //        $(this).closest('li').click();
+            //        e.preventDefault();
+            //    });
+            //});
+            ////fire event to open branch if the li contains a button instead of text
+            //tree.find('.branch>button').each(function () {
+            //    $(this).on('click', function (e) {
+            //        $(this).closest('li').click();
+            //        e.preventDefault();
+            //    });
+            //});
+        }
+    });
+
+    //Initialization of treeviews
+    $('#tree').treed();
+
+    //Category clicker
+    $('a.category').click(function () {
+        var category = $(this).data('category');
+        var subcategory = $(this).data('subcategory');
+        $('#Category1').text(category);
+        $('#Category2').val(category);
+        if (category == subcategory) subcategory = "-";
+        $('#Subcategory1').text(subcategory);
+        $('#Subcategory2').val(subcategory);
+    });
+
+</script>
+

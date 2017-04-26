@@ -1,0 +1,16 @@
+﻿<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Добавить к "@ViewData["parent"]"</h4>
+        </div>
+        <div class="modal-body">
+            <form asp-controller="Site" asp-action="CategoryAdd" asp-route-address="@ViewData["address"]" asp-route-type="@ViewData["type"]" class="form-inline" role="form">
+                <input type="text" class="form-control" name="value" value="" maxlength="70" style="width:100%"/>
+                <input type="submit" value="Сохранить" class="btn btn-success" />
+            </form>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,113 @@
+﻿@model Budget.Controllers.TransactionAddViewModel
+
+
+@if (Model.Type == "out")
+{
+@:<div class="alert alert-warning alert-dismissable">
+@:<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+@:<div class="col-md-offset-4 col-md-8">
+    if (String.IsNullOrEmpty(Model.Id))
+    {
+        @:<strong>Добавить новый расход</strong>
+    }
+    else
+    {
+        @:<strong>Редактировать запись о расходе</strong>
+    }@:</div>
+}
+@if (Model.Type == "in")
+{
+@:<div class="alert alert-success alert-dismissable">
+@:<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+@:<div class="col-md-offset-4 col-md-8">
+    if (String.IsNullOrEmpty(Model.Id)) {
+@:<strong>Добавить новый доход</strong>
+    }
+    else
+    {
+@:<strong>Редактировать запись о доходе</strong>
+    }
+@:</div>
+}
+
+<form data-ajax="true" data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="#add_form" asp-controller="Site" asp-action="TransactionAdd" asp-route-type="@Model.Type" asp-route-id="@Model.Id" class="form-horizontal" role="form">
+    @if (Model.Errors.ContainsKey("All"))
+    {
+    @:<p class="text-danger">@Model.Errors["All"]</p>
+    }
+    
+    <div class="form-group">
+        <label for="Sum" class="col-md-4 control-label">Сумма</label>
+        <div class="col-md-8">
+            <input type="text" name="Sum" class="form-control" value="@Model.Sum"/>
+            @if (Model.Errors.ContainsKey("Sum"))
+            {
+            @:<p class="text-danger">@Model.Errors["Sum"]</p>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="Text" class="col-md-4 control-label">Описание</label>
+        <div class="col-md-8">
+            <input type="text" maxlength="70" name="Text" class="form-control" value="@Model.Text"/>
+            @if (Model.Errors.ContainsKey("Text"))
+            {
+                @:<p class="text-danger">@Model.Errors["Text"]</p>
+            }
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="Date" class="col-md-4 control-label">Дата</label>
+        <div class="col-md-8">
+            <input name="Date" id="Date" type="text" class="form-control" value="@Model.Date">
+            @if (Model.Errors.ContainsKey("Date"))
+            {
+                @:<p class="text-danger">@Model.Errors["Date"]</p>
+            }
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="Category" class="col-md-4 control-label">Статья</label>
+        <div class="col-md-8">
+            <p class="form-control-static" id="Category1">@Model.Category</p>
+            <input type="hidden" id="Category2" name="Category" value="@Model.Category">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="Subcategory" class="col-md-4 control-label">Категория</label>
+        <div class="col-md-8">
+            <p class="form-control-static" id="Subcategory1">@Model.Subcategory</p>
+            <input type="hidden" id="Subcategory2" name="Subcategory" value="@Model.Subcategory">
+            @if (Model.Errors.ContainsKey("Category"))
+            {
+                @:<p class="text-danger">@Model.Errors["Category"]</p>
+        }
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-4 col-md-8">
+            <a class="btn btn-default" data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#modal" data-toggle="modal" data-target="#modal" href="/Site/TransactionCategoryEditForm/?type=@Model.Type">Выбрать категорию</a>
+            @if (String.IsNullOrEmpty(Model.Id))
+            {
+            @:<button type="submit" class="btn btn-success">Добавить</button>
+            }
+            else
+            {
+            @:<button type="submit" class="btn btn-success">Обновить</button>
+            }
+        </div>
+    </div>
+</form>
+</div>
+
+<script>
+      $('#Date').datepicker({
+      format: "dd MM yyyy",
+      autoclose: true,
+      todayHighlight: true
+      });
+</script>

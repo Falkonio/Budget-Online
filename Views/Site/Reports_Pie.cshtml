@@ -1,0 +1,241 @@
+﻿@using Microsoft.AspNetCore.Html;
+
+@{
+    ViewData["Title"] = "Структурный отчет";
+}
+
+@*Выбор диапазона выборки*@
+<form class="form-inline" role="form">
+    <input type="text" class="form-control hidden" id="type" value="out" /><span class="btn btn-warning btn-sm" id="type_picker">Расходы</span>
+    &nbsp;
+    <div class="input-group date month_picker">
+        <input type="text" class="form-control hidden" id="month_picker" />
+        <span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать месяц</span>
+    </div>
+    &nbsp;
+    <div class="input-group date year_picker">
+        <input type="text" class="form-control hidden" id="year_picker" />
+        <span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать год</span>
+    </div>
+    &nbsp;
+    <div class="form-group">
+        <div class="input-daterange input-group" id="daterange">
+            <input type="text" class="input-sm form-control" id="first_day" name="first_day" size="10" value="@ViewBag.First_Day" />
+            <span class="input-group-addon">до</span>
+            <input type="text" class="input-sm form-control" id="last_day" name="last_day" size="10" value="@ViewBag.Last_Day" />
+            <span class="input-group-btn">
+                <button class="btn btn-sm btn-default" type="button" id="range_picker"><span class="glyphicon glyphicon-chevron-right"></span></button>
+            </span>
+        </div>
+    </div>
+</form>
+
+<br />
+
+@*Сообщения при обновлении страницы*@
+
+@*Итоги по выбранному дапазону*@
+
+<h2 id="pie_title">@ViewBag.Pie_Title</h2>
+
+<style>
+    #pie_chart {
+        height: 500px;
+        font-size: 11px;
+    }
+
+    .amcharts-pie-slice {
+        transform: scale(1);
+        transform-origin: 50% 50%;
+        transition-duration: 0.3s;
+        transition: all .3s ease-out;
+        -webkit-transition: all .3s ease-out;
+        -moz-transition: all .3s ease-out;
+        -o-transition: all .3s ease-out;
+        cursor: pointer;
+        box-shadow: 0 0 30px 0 #000;
+    }
+
+        .amcharts-pie-slice:hover {
+            transform: scale(1.1);
+            filter: url(#shadow);
+        }
+</style>
+
+<div class="row">
+    <div id="pie_chart" class="col-lg-8"></div>
+    <div class="col-lg-4">
+        <div class="col-lg-12 text-center">
+            <a class="btn btn-lg btn-default hidden" id="pie_back"><b>Назад</b></a>
+        </div>
+        <div id="pie_legend" class="col-lg-12">
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="~/lib/amcharts3/amcharts/amcharts.js"></script>
+    <script src="~/lib/amcharts3/amcharts/pie.js"></script>
+    <script src="~/lib/amcharts3/amcharts/themes/light.js"></script>
+    @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+
+    <script>
+        var first_day="@ViewBag.First_Day";
+        var last_day="@ViewBag.Last_Day";
+        var first_day_full="@(new HtmlString(ViewBag.First_Day_Full))";
+        var last_day_full="@(new HtmlString(ViewBag.Last_Day_Full))";
+        var level=0;
+
+        $('#type_picker').click(function () {
+            if($('#type').val()==="in")
+            {
+                $('#type').val("out");
+                $('#type_picker').text("Расходы").addClass('btn-warning').removeClass('btn-success');
+                $("#range_picker").click();
+            }
+            else if($('#type').val()==="out")
+            {
+                $('#type').val("in");
+                $('#type_picker').text("Доходы").addClass('btn-success').removeClass('btn-warning');
+                $("#range_picker").click();
+            }
+        });
+        $('.input-group.date.month_picker').datepicker({
+            format: "mm.yyyy",
+            minViewMode: 1,
+            autoclose: true
+        }).change(function () {
+            $.getJSON('/site/Get_Days/?month='+$('#month_picker').val(), function(data) {
+                $('#first_day').val(data.firstDay);
+                $('#last_day').val(data.lastDay);
+                first_day_full=data.firstDay_Full;
+                last_day_full=data.lastDay_Full;
+                $("#range_picker").click();
+            });
+        });
+        $('.input-group.date.year_picker').datepicker({
+            format: "yyyy",
+            minViewMode: 2,
+            autoclose: true
+        }).change(function () {
+            $.getJSON('/site/Get_Days/?year='+$('#year_picker').val(), function(data) {
+                $('#first_day').val(data.firstDay);
+                $('#last_day').val(data.lastDay);
+                first_day_full=data.firstDay_Full;
+                last_day_full=data.lastDay_Full;
+                $("#range_picker").click();
+            });
+        });
+        $('#daterange').datepicker({
+            format: "dd.mm.yyyy",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $("#range_picker").click(function () {
+            first_day = $("#first_day").val();
+            last_day = $("#last_day").val();
+            var type = $('#type').val();
+            $.getJSON('/site/Get_Pie_Data/?first_day='+first_day+'&last_day='+last_day+'&type='+type, function(data) {
+                pie_chart.dataProvider = data;
+                if(type==="in") chart_title = "Структура доходов с "+first_day_full+" по "+last_day_full;
+                else chart_title = "Структура расходов с "+first_day_full+" по "+last_day_full;
+                $("#pie_title").text(chart_title);
+                pie_chart.validateData();
+                pie_chart.animateAgain();
+                $("#pie_back").addClass("hidden");
+                level=0;
+            });
+        });
+
+        var pie_chart = AmCharts.makeChart("pie_chart", {
+            "type": "pie",
+            "startEffect": "easeOutSine",
+            "startDuration": 1,
+            "theme": "light",
+            "addClassNames": true,
+            "legend":{
+                "divId": "pie_legend",
+                "align": "center",
+                "position": "center",
+                "marginRight": 0,
+                "autoMargins": false
+            },
+            "innerRadius": "30%",
+            "defs": {
+                "filter": [{
+                    "id": "shadow",
+                    "width": "200%",
+                    "height": "200%",
+                    "feOffset": {
+                        "result": "offOut",
+                        "in": "SourceAlpha",
+                        "dx": 0,
+                        "dy": 0
+                    },
+                    "feGaussianBlur": {
+                        "result": "blurOut",
+                        "in": "offOut",
+                        "stdDeviation": 5
+                    },
+                    "feBlend": {
+                        "in": "SourceGraphic",
+                        "in2": "blurOut",
+                        "mode": "normal"
+                    }
+                }]
+            },
+            "dataProvider": @(new HtmlString(ViewBag.Pie_Data)),
+            "valueField": "sum",
+            "titleField": "_id",
+            "export": {
+                "enabled": false
+            }
+        });
+
+        pie_chart.addListener("init", handleInit);
+
+        pie_chart.addListener("rollOverSlice", function(e) {
+            handleRollOver(e);
+        });
+
+        function handleInit(){
+            pie_chart.legend.addListener("rollOverItem", handleRollOver);
+        }
+
+        function handleRollOver(e){
+            var wedge = e.dataItem.wedge.node;
+            wedge.parentNode.appendChild(wedge);
+        }
+
+        var back_pie_chartData;
+        var back_pie_title;
+        pie_chart.addListener("clickSlice", function (event) {
+            if(level===0){
+                var type = $('#type').val();
+                $.getJSON('/site/Get_Pie_Data/?first_day='+first_day+'&last_day='+last_day+'&type='+type+'&category='+event.dataItem.dataContext._id, function(data) {
+                    back_pie_chartData=event.chart.dataProvider;
+                    back_pie_title=$("#pie_title").text();
+                    event.chart.dataProvider = data;
+                    if(type==="in") chart_title = event.dataItem.dataContext._id+": с "+first_day_full+" по "+last_day_full;
+                    else chart_title = event.dataItem.dataContext._id+": с "+first_day_full+" по "+last_day_full;
+                    $("#pie_title").text(chart_title);
+                    $("#pie_back").removeClass("hidden");
+                    event.chart.validateData();
+                    event.chart.animateAgain();
+                    level++;
+                });
+            }
+        });
+        $("#pie_back").click(function () {
+            pie_chart.dataProvider = back_pie_chartData;
+            $("#pie_title").text(back_pie_title);
+            $("#pie_back").addClass("hidden");
+            pie_chart.validateData();
+            pie_chart.animateAgain();
+            level=0;
+        });
+    </script>
+}
+
+

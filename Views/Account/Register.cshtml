@@ -1,0 +1,54 @@
+﻿@model Budget.Controllers.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Регистрация нового пользователя";
+}
+
+<div class="col-sm-8 col-sm-offset-2 col-xs-10 col-xs-offset-1">
+    <div class="basic-login">
+        <form asp-controller="Account" asp-action="Register" method="post" class="form-horizontal">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Email" class="col-md-5 control-label"></label>
+                <div class="col-md-5">
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Name" class="col-md-5 control-label"></label>
+                <div class="col-md-5">
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password" class="col-md-5 control-label"></label>
+                <div class="col-md-5">
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PasswordConfirm" class="col-md-5 control-label"></label>
+                <div class="col-md-5">
+                    <input asp-for="PasswordConfirm" class="form-control" />
+                    <span asp-validation-for="PasswordConfirm" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-5">
+                    <button type="submit" class="btn btn-default">Зарегистрировать</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <!-- start: Meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>@ViewData["Title"] - Budget-Online</title>
+    <meta name="description" content="Онлайн приложение для ведения семейного бюджета и домашней бухгалтерии. Простой и удобный способ учета повседневных доходов и расходов." />
+    <meta name="keywords" content="бюджет, семейный, планирование расходов" />
+    <meta name="author" content="Falkonio" />
+    <!-- end: Meta -->
+    <!-- start: Mobile Specific -->
+    <meta name="viewport" content="width=device-width" />
+    <!-- end: Mobile Specific -->
+    <!-- start: Facebook Open Graph -->
+    <meta property="og:title" content="" />
+    <meta property="og:description" content="" />
+    <meta property="og:type" content="" />
+    <meta property="og:url" content="" />
+    <meta property="og:image" content="" />
+    <!-- end: Facebook Open Graph -->
+    <!-- start: CSS -->
+    <environment names="Development">
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    </environment>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/lib/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/icomoon-social.css">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,600,800' rel='stylesheet' type='text/css'>
+    @*<link rel="stylesheet" href="~/css/leaflet.css" />*@
+    <link rel="stylesheet" href="~/css/main.css">
+    <!-- end: CSS -->
+    @*<script src="~/js/modernizr-2.6.2-respond-1.1.0.min.js"></script>*@
+</head>
+<body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+    <!-- Navigation & Logo-->
+    <div class="mainmenu-wrapper">
+        <div class="navbar navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle btn-link" data-toggle="collapse" data-target=".navbar-collapse"><span class="glyphicon glyphicon-th-large"></span></button>
+                    <a asp-controller="Home" asp-action="Index" class="navbar-brand"><span class="glyphicon glyphicon-signal"></span> Budget-Online</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a asp-controller="Site" asp-action="Index">Операции</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Отчёты <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a asp-controller="Site" asp-action="Reports_Pie">Структурный</a>
+                                    </li>
+                                    <li>
+                                        <a asp-controller="Site" asp-action="Reports_Balance">Балансовый</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a asp-controller="Site" asp-action="Budgets">Бюджеты</a>
+                            </li>
+                            <li>
+                                <a asp-controller="Site" asp-action="Categories">Категории</a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                <a asp-controller="Account" asp-action="User" title="User">@User.FindFirst(x => x.Type == ClaimTypes.Name).Value</a>
+                            </li>
+                            <li>
+                                <a asp-controller="Account" asp-action="LogOff">Выход <span class="glyphicon glyphicon-log-out"></span></a>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a asp-controller="Home" asp-action="Index">На главную</a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                <a asp-controller="Account" asp-action="Register">Регистрация</a>
+                            </li>
+                            <li>
+                                <a asp-controller="Account" asp-action="Login"><span class="glyphicon glyphicon-log-in"></span> Вход</a>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Title -->
+    <div class="section section-breadcrumbs">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>@ViewData["Title"]</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Content -->
+    <div class="section">
+        <div class="container content">
+            <div class="row">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    &nbsp;
+                    <div class="footer-copyright">&copy; 2017 Falkonio. All rights reserved.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- start: Java Script -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    @*<script src="~/js/leaflet.js"></script>
+        <script src="~/js/jquery.fitvids.js"></script>
+        <script src="~/js/jquery.sequence-min.js"></script>
+        <script src="~/js/jquery.bxslider.js"></script>
+        <script src="~/js/template.js"></script>*@
+    <environment names="Development">
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+    <!-- end: Java Script -->
+    @RenderSection("scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,156 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+
+@{
+    ViewData["Title"] = "Категории доходов и расходов";
+}
+
+@if (ViewBag.Error == "length")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Значение должно быть от 3-х до 70-ти символов.
+    </div>
+}
+@if (ViewBag.Error == "fail")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Ошибка записи.
+    </div>
+}
+@if (ViewBag.Error == "success")
+{
+    <div class="alert alert-success alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Действие произведено успешно.
+    </div>
+}
+
+<div class="modal fade" id='modal' style="margin-top:100px"></div>
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#outputs" data-toggle="tab">Расходы</a></li>
+    <li><a href="#inputs" data-toggle="tab">Доходы</a></li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+    <div class="tab-pane fade in active" id="outputs">
+        <p></p><a class="btn btn-success" data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#modal" data-toggle="modal" data-target="#modal" href="/Site/CategoryAddForm/?type=out&address=root&amp;parent=Расходы"><span class="glyphicon glyphicon-plus"></span> Добавить статью</a>
+        <ul id="tree2">
+            @Structure_Maker((dynamic)ViewBag.Outputs_Dict, "", ViewBag.Outputs_Parrent, 0, "out")
+        </ul>
+    </div>
+    <div class="tab-pane fade" id="inputs">
+        <p></p><a class="btn btn-success" data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#modal" data-toggle="modal" data-target="#modal" href="/Site/CategoryAddForm/?type=in&address=root&amp;parent=Доходы"><span class="glyphicon glyphicon-plus"></span> Добавить статью</a>
+        <ul id="tree1">
+            @Structure_Maker((dynamic)ViewBag.Inputs_Dict, "", ViewBag.Inputs_Parrent, 0, "in")
+        </ul>
+    </div>
+</div>
+
+    @functions{
+        int max_levels = 2;
+        int max_elements = 100;
+
+        private HtmlString Structure_Maker(Dictionary<string, object> _structure, string _parent, string _address, int _level, string _type)
+        {
+            StringBuilder sb = new StringBuilder();
+            var structure = _structure.OrderBy(items => items.Key);
+            _level++;
+            int counter = 0;
+            foreach (var item in structure)
+            {
+                if (_level>max_levels || counter>=max_elements) break;
+                counter++;
+                int elements = (item.Value as Dictionary<string, object>).Count;
+                string parent = "";
+                if (_level == 1) parent = item.Key;
+                else parent = _parent;
+                string address = $"{_address}.{item.Key}";
+                //{item.Key} {parent} {address}
+                sb.Append($"<li>{item.Key}");
+                sb.Append($" <a data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#modal' data-toggle='modal' data-target='#modal' href='/Site/CategoryEditForm/?type={_type}&address={address}&item={item.Key}'><span class='glyphicon glyphicon-edit'></span></a>");
+                sb.Append($" <a data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#modal' data-toggle='modal' data-target='#modal' href='/Site/CategoryDelForm/?type={_type}&address={address}&item={item.Key}'><span class='glyphicon glyphicon-remove' style='color:red;'></span></a>");
+
+                if (_level<max_levels)
+                {
+                sb.Append("<ul>");
+                if (_level < max_levels && elements < max_elements) sb.Append($"<li><a data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#modal' data-toggle='modal' data-target='#modal' href='/Site/CategoryAddForm/?type={_type}&address={address}&parent={item.Key}'><span class='glyphicon glyphicon-plus' style='color:green;'></span> Добавить категорию</a></li>");
+                if (elements > 0) sb.Append(Structure_Maker((dynamic)item.Value, parent, address, _level, _type));
+                sb.Append("</ul>");
+                }
+
+                sb.Append("</li>");
+            }
+
+            return new HtmlString(sb.ToString());
+        }
+        }
+
+        @section Scripts {
+        @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+        <script>
+            $.fn.extend({
+                treed: function (o) {
+
+                    var openedClass = 'glyphicon-minus-sign';
+                    var closedClass = 'glyphicon-plus-sign';
+
+                    if (typeof o != 'undefined') {
+                        if (typeof o.openedClass != 'undefined') {
+                            openedClass = o.openedClass;
+                        }
+                        if (typeof o.closedClass != 'undefined') {
+                            closedClass = o.closedClass;
+                        }
+                    };
+
+                    //initialize each of the top levels
+                    var tree = $(this);
+                    tree.addClass("tree");
+                    tree.find('li').has("ul").each(function () {
+                        var branch = $(this); //li with children ul
+                        branch.prepend("<i class='indicator glyphicon " + closedClass + "'></i> ");
+                        branch.addClass('branch');
+                        branch.on('click', function (e) {
+                            if (this == e.target) {
+                                var icon = $(this).children('i:first');
+                                icon.toggleClass(openedClass + " " + closedClass);
+                                $(this).children().children().toggle();
+                            }
+                        })
+                        branch.children().children().toggle();
+                    });
+                    //fire event from the dynamically added icon
+                    tree.find('.branch .indicator').each(function () {
+                        $(this).on('click', function () {
+                            $(this).closest('li').click();
+                        });
+                    });
+                    ////fire event to open branch if the li contains an anchor instead of text
+                    //tree.find('.branch>a').each(function () {
+                    //    $(this).on('click', function (e) {
+                    //        $(this).closest('li').click();
+                    //        e.preventDefault();
+                    //    });
+                    //});
+                    ////fire event to open branch if the li contains a button instead of text
+                    //tree.find('.branch>button').each(function () {
+                    //    $(this).on('click', function (e) {
+                    //        $(this).closest('li').click();
+                    //        e.preventDefault();
+                    //    });
+                    //});
+                }
+            });
+
+            //Initialization of treeviews
+
+            $('#tree1').treed();
+            $('#tree2').treed();
+            </script>
+        }

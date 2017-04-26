@@ -1,0 +1,306 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+@using MongoDB.Bson;
+
+@{
+    ViewData["Title"] = "Отчёты";
+}
+
+<h1>@ViewData["Title"]</h1>
+<br />
+@*Выбор диапазона выборки*@
+<form class="form-inline" role="form">
+    <input type="text" class="form-control hidden" id="type" value="out"/><span class="btn btn-warning btn-sm" id="type_picker">Расходы</span>
+    &nbsp;
+    <div class="input-group date month_picker">
+        <input type="text" class="form-control hidden" id="month_picker"/><span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать месяц</span>
+    </div>
+    &nbsp;
+    <div class="input-group date year_picker">
+        <input type="text" class="form-control hidden" id="year_picker"/><span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать год</span>
+    </div>
+    &nbsp;
+    <div class="form-group">
+        <div class="input-daterange input-group" id="daterange">
+            <input type="text" class="input-sm form-control" id="first_day" name="first_day" size="10" value="@ViewData["First_Day"]" />
+            <span class="input-group-addon">до</span>
+            <input type="text" class="input-sm form-control" id="last_day" name="last_day" size="10" value="@ViewData["Last_Day"]" />
+            <span class="input-group-btn">
+                <button class="btn btn-sm btn-default" type="button" id="range_picker"><span class="glyphicon glyphicon-chevron-right"></span></button>
+            </span>
+        </div>
+    </div>
+</form>
+
+<br />
+
+@*Сообщения при обновлении страницы*@
+
+@*Итоги по выбранному дапазону*@
+
+
+
+<style>
+    #chart {
+        height: 500px;
+        font-size: 11px;
+    }
+
+    .amcharts-pie-slice {
+        transform: scale(1);
+        transform-origin: 50% 50%;
+        transition-duration: 0.3s;
+        transition: all .3s ease-out;
+        -webkit-transition: all .3s ease-out;
+        -moz-transition: all .3s ease-out;
+        -o-transition: all .3s ease-out;
+        cursor: pointer;
+        box-shadow: 0 0 30px 0 #000;
+    }
+
+        .amcharts-pie-slice:hover {
+            transform: scale(1.1);
+            filter: url(#shadow);
+        }
+</style>
+<div class="row">
+    <div id="chart" class="col-lg-8"></div>
+    <div id="legend" class="col-lg-4"></div>
+</div>
+
+@section Scripts
+{
+    <script src="~/lib/amcharts3/amcharts/amcharts.js"></script>
+    <script src="~/lib/amcharts3/amcharts/pie.js"></script>
+    <script src="~/lib/amcharts3/amcharts/themes/light.js"></script>
+    @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+
+    <script>
+        $('#type_picker').click(function () {
+            if($('#type').val()==="in")
+            {
+                $('#type').val("out");
+                $('#type_picker').text("Расходы").addClass('btn-warning').removeClass('btn-success');
+                $("#range_picker").click();
+            }
+            else if($('#type').val()==="out")
+            {
+                $('#type').val("in");
+                $('#type_picker').text("Доходы").addClass('btn-success').removeClass('btn-warning');
+                $("#range_picker").click();
+            }
+        });
+        $('.input-group.date.month_picker').datepicker({
+            format: "mm.yyyy",
+            minViewMode: 1,
+            autoclose: true
+        }).change(function () {
+            $.getJSON('/site/Get_Days/?month='+$('#month_picker').val(), function(data) {
+                $('#first_day').val(data.firstDay);
+                $('#last_day').val(data.lastDay);
+                $("#range_picker").click();
+            });
+        });
+        $('.input-group.date.year_picker').datepicker({
+            format: "yyyy",
+            minViewMode: 2,
+            autoclose: true
+        }).change(function () {
+            $.getJSON('/site/Get_Days/?year='+$('#year_picker').val(), function(data) {
+                $('#first_day').val(data.firstDay);
+                $('#last_day').val(data.lastDay);
+                $("#range_picker").click();
+            });
+        });
+        $('#daterange').datepicker({
+            format: "dd.mm.yyyy",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $("#range_picker").click(function () {
+            var first_day = $("#first_day").val();
+            var last_day = $("#last_day").val();
+            var type = $('#type').val();
+            $.getJSON('/site/Get_Data/?first_day='+first_day+'&last_day='+last_day+'&type='+type, function(data) {
+                chart.dataProvider = data;
+                chartData = data;
+                if(type==="in") chart_title = "Структура доходов с "+first_day+" по "+last_day;
+                else chart_title = "Структура расходов с "+first_day+" по "+last_day;
+                chart.titles[0].text = chart_title;
+                chart.drillLevels = [{
+                    "title": chart_title,
+                    "data": chartData
+                }];
+                chart.validateData();
+                chart.animateAgain();
+            });
+        });
+
+        var chartData = @(new HtmlString(ViewBag.Data));
+        var chart_title="@(new HtmlString(ViewBag.Pie_Title))";
+        @*
+        var chartData = [{
+            "title": "Marketing",
+            "value": 23,
+            "data": [
+              { "title": "Jan", "value": 1 },
+              { "title": "Feb", "value": 2 },
+              { "title": "Mar", "value": 1 },
+              { "title": "Apr", "value": 3 },
+              { "title": "May", "value": 2 },
+              { "title": "Jun", "value": 1 },
+              { "title": "Jul", "value": 2 },
+              { "title": "Aug", "value": 3 },
+              { "title": "Sep", "value": 3 },
+              { "title": "Oct", "value": 1 },
+              { "title": "Nov", "value": 1 },
+              { "title": "Dec", "value": 3 }
+            ]
+        }, {
+            "title": "Sales",
+            "value": 26,
+            "data": [
+              { "title": "Jan", "value": 4 },
+              { "title": "Feb", "value": 3 },
+              { "title": "Mar", "value": 1 },
+              { "title": "Apr", "value": 4 },
+              { "title": "May", "value": 2 },
+              { "title": "Jun", "value": 1 },
+              { "title": "Jul", "value": 2 },
+              { "title": "Aug", "value": 2 },
+              { "title": "Sep", "value": 3 },
+              { "title": "Oct", "value": 1 },
+              { "title": "Nov", "value": 1 },
+              { "title": "Dec", "value": 3 }
+            ]
+        }, {
+            "title": "Logistics",
+            "value": 30,
+            "data": [
+              { "title": "Jan", "value": 2 },
+              { "title": "Feb", "value": 3 },
+              { "title": "Mar", "value": 1 },
+              { "title": "Apr", "value": 5 },
+              { "title": "May", "value": 2 },
+              { "title": "Jun", "value": 1 },
+              { "title": "Jul", "value": 2 },
+              { "title": "Aug", "value": 2 },
+              { "title": "Sep", "value": 3 },
+              { "title": "Oct", "value": 1 },
+              { "title": "Nov", "value": 1 },
+              { "title": "Dec", "value": 3 }
+            ]
+        }];
+        *@
+
+        var chart = AmCharts.makeChart("chart", {
+            "type": "pie",
+            "startEffect": "easeOutSine",
+            "startDuration": 1,
+            "theme": "light",
+            "addClassNames": true,
+            "legend": {
+                "divId": "legend",
+                "align": "right",
+                "position": "right",
+                "marginRight": 10,
+                "autoMargins": false
+            },
+            "innerRadius": "0%",
+            "defs": {
+                "filter": [{
+                    "id": "shadow",
+                    "width": "200%",
+                    "height": "200%",
+                    "feOffset": {
+                        "result": "offOut",
+                        "in": "SourceAlpha",
+                        "dx": 0,
+                        "dy": 0
+                    },
+                    "feGaussianBlur": {
+                        "result": "blurOut",
+                        "in": "offOut",
+                        "stdDeviation": 5
+                    },
+                    "feBlend": {
+                        "in": "SourceGraphic",
+                        "in2": "blurOut",
+                        "mode": "normal"
+                    }
+                }]
+            },
+            "dataProvider": chartData,
+            "valueField": "value",
+            "titleField": "title",
+            "labelText": "[[title]]: [[value]]",
+            "pullOutOnlyOne": true,
+            "titles": [{ "text": chart_title }],
+            "allLabels": []
+        });
+        chart.addListener("init", handleInit);
+        chart.addListener("rollOverSlice", function (e) {
+            handleRollOver(e);
+        });
+        function handleInit() {
+            chart.legend.addListener("rollOverItem", handleRollOver);
+        }
+        function handleRollOver(e) {
+            var wedge = e.dataItem.wedge.node;
+            wedge.parentNode.appendChild(wedge);
+        }
+        // initialize step array
+        chart.drillLevels = [{
+            "title": chart_title,
+            "data": chartData
+        }];
+
+        // add slice click handler
+        chart.addListener("clickSlice", function (event) {
+            // get chart object
+            var chart = event.chart;
+            // check if drill-down data is avaliable
+            if (event.dataItem.dataContext.data !== undefined) {
+                // save for back button
+                chart.drillLevels.push(event.dataItem.dataContext);
+                // replace data
+                chart.dataProvider = event.dataItem.dataContext.data;
+                // replace title
+                chart.titles[0].text = event.dataItem.dataContext.title;
+                // add back link
+                // let's add a label to go back to yearly data
+                event.chart.addLabel(
+                  0, 40,        //x,y
+                  "< Назад",    //text
+                  "center",     //align
+                  19,           //size
+                  undefined,    //color
+                  undefined,    //rotation
+                  undefined,    //alpha
+                  true,         //bold
+                  'javascript:drillUp();');
+                // take in data and animate
+                chart.validateData();
+                chart.animateAgain();
+            }
+        });
+        function drillUp() {
+            // get level
+            chart.drillLevels.pop();
+            var level = chart.drillLevels[chart.drillLevels.length - 1];
+            // replace data
+            chart.dataProvider = level.data;
+            // replace title
+            chart.titles[0].text = chart_title;
+            // remove labels
+            if (chart.drillLevels.length === 1)
+                chart.clearLabels();
+            // take in data and animate
+            chart.validateData();
+            chart.animateAgain();
+        }
+    </script>
+}
+
+

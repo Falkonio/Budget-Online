@@ -1,0 +1,132 @@
+﻿@using Microsoft.AspNetCore.Mvc.Localization
+@inject IHtmlLocalizer<SharedResource> SharedLocalizer
+
+@{
+    ViewData["Title"] = ViewBag.User["name"].AsString;
+    string registred = Convert.ToDateTime(ViewBag.User["registred"].AsString).ToString("D");
+}
+<style>
+    td:first-child {
+        width: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+    }
+
+    td.action {
+        width: 30px;
+        max-width: 30px;
+    }
+</style>
+
+<h1>@ViewBag.User["name"]</h1>
+
+@if (ViewBag.Message == "error")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Некорректные данные.
+    </div>
+}
+@if (ViewBag.Message == "fail")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Ошибка записи.
+    </div>
+}
+@if (ViewBag.Message == "success")
+{
+    <div class="alert alert-success alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Действие произведено успешно.
+    </div>
+}
+@if (ViewBag.Message == "email_unique")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> E-mail уже используется.
+    </div>
+}
+@if (ViewBag.Message == "pass_length")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Длина пароля должна быть от 6 до 50 символов.
+    </div>
+}
+@if (ViewBag.Message == "pass_unconfirmed")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Пароли не совпадают.
+    </div>
+}
+@if (ViewBag.Message == "pass_wrong")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Ошибка!</strong> Неправильный пароль.
+    </div>
+}
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs">
+    <li class="active">
+        <a href="#main" data-toggle="tab">Основные данные</a>
+    </li>
+    <li>
+        <a href="#security" data-toggle="tab">Безопасность</a>
+    </li>
+    <li>
+        <a href="#settings" data-toggle="tab">Настройки</a>
+    </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+    <div class="tab-pane fade in active" id="main">
+        <br />
+        @* Вкладка с таблицей основных данных пользователя *@
+        <table class="table">
+            <tr>
+                <td>Имя</td>
+                <td class="action">
+                    <a asp-controller="Account" asp-action="UserNameEditForm" data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#name'><span class='glyphicon glyphicon-edit' style='color:silver;'></span></a>
+                </td>
+                <td id="name">@ViewBag.User["name"]</td>
+            </tr>
+            <tr>
+                <td>E-mail</td>
+                <td class="action">
+                    <a asp-controller="Account" asp-action="UserEmailEditForm" data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#email'><span class='glyphicon glyphicon-edit' style='color:silver;'></span></a>
+                </td>
+                <td id="email">@ViewBag.User["email"]</td>
+            </tr>
+            <tr>
+                <td>Дата регистрации</td>
+                <td></td>
+                <td>@registred</td>
+            </tr>
+        </table>
+    </div>
+    <div class="tab-pane fade pull-left" id="security">
+        <br />
+        @* Вкладка с формой смены пароля *@
+        <a asp-controller="Account" asp-action="UserPasswordEditForm" class="btn btn-default" data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#security'>Сменить пароль</a>
+    </div>
+    <div class="tab-pane fade" id="settings">
+        <br />
+        @* Вкладка с настройками сайта *@
+        <table class="table">
+            <tr>
+                <td>Язык</td>
+                <td>@ViewBag.User["lang"]</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+}

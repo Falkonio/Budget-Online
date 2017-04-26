@@ -1,0 +1,189 @@
+﻿@using Microsoft.AspNetCore.Html;
+
+@{
+    ViewData["Title"] = "Балансовый отчет";
+}
+
+@*Выбор диапазона выборки*@
+<div class="btn-group">
+    <a class="btn btn-default btn-lg" id="prev_year"><span class="glyphicon glyphicon-arrow-left"></span></a>
+    <span class="btn btn-default btn-lg" id="current_year">@ViewBag.Year</span>
+    <a class="btn btn-default btn-lg" id="next_year"><span class="glyphicon glyphicon-arrow-right"></span></a>
+</div>
+<br />
+<br />
+<style>
+    #balance_chart {
+        height: 500px;
+    }
+</style>
+
+<div id="balance_chart"></div>
+
+@section Scripts
+{
+    <script src="~/lib/amcharts3/amcharts/amcharts.js"></script>
+    <script src="~/lib/amcharts3/amcharts/serial.js"></script>
+    <script src="~/lib/amcharts3/amcharts/themes/light.js"></script>
+    @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+
+    <script>
+
+        $('#prev_year').click(function () {
+            var year = parseInt($('#current_year').text())-1;
+            $.getJSON('/site/Get_Balance_Data/?year='+year, function(data) {
+                balance_chart.dataProvider = data;
+                $('#current_year').text(year);
+                balance_chart.validateData();
+                balance_chart.animateAgain();
+            });
+        });
+        $('#next_year').click(function () {
+            var year = parseInt($('#current_year').text())+1;
+            $.getJSON('/site/Get_Balance_Data/?year='+year, function(data) {
+                balance_chart.dataProvider = data;
+                $('#current_year').text(year);
+                balance_chart.validateData();
+                balance_chart.animateAgain();
+            });
+        });
+
+
+        @*
+        var balance_chart_data = [{
+            "period": "ЯНВ",
+            "income": -3.5,
+            "expense": 32,
+            "balance": 21.1,
+            "dashLengthLine": 0,
+            "dashLengthColumn": 0,
+            "alpha": 1,
+            "additional": ""
+
+        }, {
+            "period": "ФЕВ",
+            "income": 6.2,
+            "expense": 24,
+            "balance": 30.5,
+            "dashLengthLine": 0,
+            "dashLengthColumn": 0,
+            "alpha": 1,
+            "additional": ""
+
+        }, {
+            "period": "МАР",
+            "income": -3,
+            "expense": 28,
+            "balance": 34.9,
+            "dashLengthLine": 0,
+            "dashLengthColumn": 0,
+            "alpha": 1,
+            "additional": ""
+        }, {
+            "period": "АПР",
+            "income": 10.5,
+            "expense": 31.1,
+            "dashLengthLine": 0,
+            "dashLengthColumn": 0,
+            "alpha": 1,
+            "additional": ""
+
+        }, {
+            "period": "МАЙ",
+            "income": 12.6,
+            "expense": 28.2,
+            "dashLengthLine": 5
+        }, {
+            "period": 2014,
+            "income": 30,
+            "expense": 28,
+            "balance": 14.9,
+            "dashLengthLine": 0,
+            "dashLengthColumn": 5,
+            "alpha": 0.2,
+            "additional": "(среднее)"
+        }];
+        *@
+
+        var balance_chart = AmCharts.makeChart("balance_chart", {
+            "type": "serial",
+            "colors": [
+						"#6666CC",
+						"#66CC66",
+						"#CC6666"
+            ],
+            "addClassNames": true,
+            "theme": "light",
+            "autoMargins": false,
+            "marginLeft": 60,
+            "marginRight": 8,
+            "marginTop": 10,
+            "marginBottom": 26,
+            "balloon": {
+                "adjustBorderColor": false,
+                "horizontalPadding": 10,
+                "verticalPadding": 8,
+                "color": "#ffffff"
+            },
+
+            "dataProvider": @(new HtmlString(ViewBag.Balance_Data)),
+            "valueAxes": [{
+                "axisAlpha": 0,
+                "position": "left"
+            }],
+            "startDuration": 1,
+            "graphs": [{
+                "alphaField": "alpha",
+                "balloonText": "<span style='font-size:12px;'>[[title]] в [[category]]:<br><span style='font-size:20px;'>[[value]]</span> [[additional]]</span>",
+                "fillAlphas": 1,
+                "title": "Баланс",
+                "type": "column",
+                "valueField": "balance",
+                "dashLengthField": "dashLengthColumn"
+            }, {
+                "id": "income",
+                "balloonText": "<span style='font-size:12px;'>[[title]] в [[category]]:<br><span style='font-size:20px;'>[[value]]</span> [[additional]]</span>",
+                "bullet": "round",
+                "lineThickness": 3,
+                "bulletSize": 7,
+                "bulletBorderAlpha": 1,
+                "bulletColor": "#FFFFFF",
+                "useLineColorForBulletBorder": true,
+                "bulletBorderThickness": 3,
+                "fillAlphas": 0,
+                "lineAlpha": 1,
+                "title": "Доходы",
+                "valueField": "income",
+                "dashLengthField": "dashLengthLine"
+            },
+        {
+            "id": "expense",
+            "balloonText": "<span style='font-size:12px;'>[[title]] в [[category]]:<br><span style='font-size:20px;'>[[value]]</span> [[additional]]</span>",
+            "bullet": "round",
+            "lineThickness": 3,
+            "bulletSize": 7,
+            "bulletBorderAlpha": 1,
+            "bulletColor": "#FFFFFF",
+            "useLineColorForBulletBorder": true,
+            "bulletBorderThickness": 3,
+            "fillAlphas": 0,
+            "lineAlpha": 1,
+            "title": "Расходы",
+            "valueField": "expense",
+            "dashLengthField": "dashLengthLine"
+        },
+            ],
+            "categoryField": "period",
+            "categoryAxis": {
+                "gridPosition": "start",
+                "axisAlpha": 0,
+                "tickLength": 0
+            },
+            "export": {
+                "enabled": false
+            }
+        });
+    </script>
+}
+
+

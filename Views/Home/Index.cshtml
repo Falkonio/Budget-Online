@@ -1,0 +1,127 @@
+﻿@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Localization
+@inject IViewLocalizer Localizer
+@inject IHtmlLocalizer<SharedResource> SharedLocalizer
+
+@{
+    ViewData["Title"] = Localizer["Title"];
+}
+<div class="row hidden-xs">
+    <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+        <!-- Indicators -->
+        <ol class="carousel-indicators">
+            <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+            <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+            <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+            <li data-target="#carousel-example-generic" data-slide-to="3"></li>
+            <li data-target="#carousel-example-generic" data-slide-to="4"></li>
+        </ol>
+
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+            <div class="item active">
+                <div class="row">
+                    <div class="col-sm-8 text-right">
+                        <h2>Учитывайте все свои расходы и доходы</h2>
+                        <p>
+                            Вносите все свои расходы и доходы, чтобы держать финансы под полным контролем. Стройте свои финансовые планы и составляйте бюджет.
+                        </p>
+                    </div>
+                    <div class="col-sm-4 text-left">
+                        <img src="~/img/main-page/justice-scale.png" width="200" />
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <div class="row">
+                    <div class="col-sm-8 text-right">
+                        <h2>Пользуйтесь сервисом где угодно</h2>
+                        <p>
+                            Сайт открывается с любого браузера. Комфортная работа с мобильных устройств и планшетов.
+                        </p>
+                    </div>
+                    <div class="col-sm-4 text-left">
+                        <img src="~/img/main-page/responsive.png" width="200" />
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <div class="row">
+                    <div class="col-sm-8 text-right">
+                        <h2>Наглядные отчеты и диаграммы</h2>
+                        <p>
+                            Сервис поможет вам проанализировать ваши финансы при помощи многообразных отчетов и наглядных диаграмм.
+                        </p>
+                    </div>
+                    <div class="col-sm-4 text-left">
+                        <img src="~/img/main-page/pie-chart.png" width="200" />
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <div class="row">
+                    <div class="col-sm-8 text-right">
+                        <h2>Настройте категории расходов и доходов по своему желанию</h2>
+                        <p>
+                            Свободно создавайте и удаляйте категории из двухуровнего списка по своему желанию.
+                        </p>
+                    </div>
+                    <div class="col-sm-4 text-left">
+                        <img src="~/img/main-page/price-tag.png" width="200" />
+                    </div>
+                </div>
+            </div><div class="item">
+    <div class="row">
+        <div class="col-sm-8 text-right">
+            <h2>Реализуйте свои мечты как можно раньше</h2>
+            <p>
+                Мотивирует в накоплении денег на желаемую покупку, помогает достичь цели быстрее.
+            </p>
+        </div>
+        <div class="col-sm-4 text-left">
+            <img src="~/img/main-page/piggy-bank.png" width="200" />
+        </div>
+    </div>
+</div>
+        </div>
+
+        <!-- Controls -->
+        <a class="left carousel-control" href="#carousel-example-generic" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+        </a>
+        <a class="right carousel-control" href="#carousel-example-generic" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="service-wrapper">
+            <img src="~/img/main-page/invention.png" width="64">
+            <h3>Простота</h3>
+            <p>Не нужно обладать никакими специальными бухгалтерскими знаниями.</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="service-wrapper">
+            <img src="~/img/main-page/growth.png" width="64">
+            <h3>Польза</h3>
+            <p>Ведение учета домашних финансов поможет в достижении целей.</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="service-wrapper">
+            <img src="~/img/main-page/get-money.png" width="64">
+            <h3>Выгода</h3>
+            <p>Анализируя свой бюджет, можно избежать излишних расходов.</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="service-wrapper">
+            <img src="~/img/main-page/laptop.png" width="64">
+            <h3>Практичность</h3>
+            <p>Весь необходимый набор функций для контроля семейного бюджета.</p>
+        </div>
+    </div>
+</div>

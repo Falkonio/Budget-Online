@@ -1,0 +1,74 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+@using MongoDB.Bson;
+
+@{
+    ViewData["Title"] = "Бюджеты";
+}
+
+@*Места для вставки AJAX*@
+<div class="modal fade" id='modal' style="margin-top:100px"></div>
+
+<div class="col-md-12">
+    <a asp-controller="Site" asp-action="BudgetAdd" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Добавить новый бюджет</a>
+    <hr />
+    @if (ViewBag.Budgets == null || ViewBag.Budgets.Count == 0)
+    {
+        @:<h3>У вас нет ни одного бюджета</h3>
+    }
+    else
+    {
+        @foreach(var Budget in ViewBag.Budgets)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h2><small>
+                        <a href="/Site/BudgetEdit/?id=@Budget.Id"><span class="glyphicon glyphicon-edit" data-toggle='tooltip' data-placement='top' title='Редактировать'></span></a>
+                        <a data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#modal' data-toggle='modal' data-target='#modal' href='/Site/BudgetDelForm/?id=@Budget.Id&text=@Budget.Name'><span class="glyphicon glyphicon-remove" style="color:red;" data-toggle='tooltip' data-placement='top' title='Удалить'></span></a>
+                        </small>
+                        <a data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#@Budget.Id" href="/Site/BudgetAnnual/?id=@Budget.Id"><span class="glyphicon glyphicon-stats" data-toggle='tooltip' data-placement='top' title='Годовая статистика'></span></a>
+                         @Budget.Name</h2>
+                    @if (Budget.Current <= Budget.Sum)
+                    {
+                    <p class="lead">Израсходовно <b>@Budget.Current.ToString("### ### ### ###.##")</b> из <b>@Budget.Sum.ToString("### ### ### ###.##")</b>. Осталось потратить: <b>@((Budget.Sum-Budget.Current).ToString("### ### ### ###.##"))</b>.</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="@(Math.Floor(Budget.Current*100/Budget.Sum))" aria-valuemin="0" aria-valuemax="100" style="width: @(Math.Floor(Budget.Current*100/Budget.Sum))%;">
+                            @Math.Floor(Budget.Current*100/Budget.Sum)%
+                        </div>
+                    </div>
+                    }
+                    else
+                    {
+                    <p class="lead">Перерасход <b>@((Budget.Current-Budget.Sum).ToString("### ### ### ###.##"))</b> сверх запланированных <b>@Budget.Sum.ToString("### ### ### ###.##")</b>. Всего потрачено: <b>@Budget.Current.ToString("### ### ### ###.##")</b>.</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success" style="width: @(Math.Floor(Budget.Sum*100/Budget.Current))%">
+                            Перерасход @Math.Floor((Budget.Current - Budget.Sum) * 100 / Budget.Sum)%
+                        </div>
+                        <div class="progress-bar progress-bar-danger" style="width: @(100-Math.Floor(Budget.Sum*100/Budget.Current))%">
+                        </div>
+                    </div>
+                    }
+                    <div id="@Budget.Id"></div>
+                </div>
+            </div>
+
+
+        }
+    }
+
+</div>
+
+@section Scripts
+{
+<script src="~/lib/amcharts3/amcharts/amcharts.js"></script>
+<script src="~/lib/amcharts3/amcharts/serial.js"></script>
+<script src="~/lib/amcharts3/amcharts/themes/light.js"></script>
+@{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+
+    <script>
+
+    </script>
+}
+
+

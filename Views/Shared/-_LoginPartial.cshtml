@@ -1,0 +1,17 @@
+﻿@if (User.Identity.IsAuthenticated) {
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a asp-controller="Account" asp-action="User" title="User">@User.FindFirst(x => x.Type == ClaimTypes.Name).Value</a>
+            </li>
+            <li>
+                <a asp-controller="Account" asp-action="LogOff">Выход <span class="glyphicon glyphicon-log-out"></span></a>
+            </li>
+        </ul>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li><a asp-controller="Account" asp-action="Register">Регистрация</a></li>
+        <li><a asp-controller="Account" asp-action="Login"><span class="glyphicon glyphicon-log-in"></span> Вход</a></li>
+    </ul>
+}

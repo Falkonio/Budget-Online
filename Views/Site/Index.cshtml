@@ -1,0 +1,202 @@
+﻿@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Html;
+@using MongoDB.Bson;
+
+@{
+    ViewData["Title"] = "Текущие доходы и расходы";
+}
+
+@*Выбор диапазона выборки*@
+<form class="form-inline" role="form">
+    <div class="input-group date month_picker">
+        <input type="text" class="form-control hidden" id="month_picker" /><span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать месяц</span>
+    </div>
+    &nbsp;
+    <div class="input-group date year_picker">
+        <input type="text" class="form-control hidden" id="year_picker" /><span class="btn btn-default btn-sm"><i class="glyphicon glyphicon-th"></i> Выбрать год</span>
+    </div>
+    &nbsp;
+    <div class="form-group">
+        <div class="input-daterange input-group" id="daterange">
+            <input type="text" class="input-sm form-control" id="first_day" name="first_day" size="10" value="@ViewData["First_Day"]" />
+            <span class="input-group-addon">до</span>
+            <input type="text" class="input-sm form-control" id="last_day" name="last_day" size="10" value="@ViewData["Last_Day"]" />
+            <span class="input-group-btn">
+                <button class="btn btn-sm btn-default" type="button" id="range_picker"><span class="glyphicon glyphicon-chevron-right"></span></button>
+            </span>
+        </div>
+    </div>
+</form>
+
+<br />
+
+@*Сообщения при обновлении страницы*@
+@if (ViewData["Error"].ToString() == "add_success")
+{
+    <div class="alert alert-success alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Запись успешно добавлена.
+    </div>
+}
+@if (ViewData["Error"].ToString() == "edit_success")
+{
+    <div class="alert alert-success alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Запись успешно отредактирована.
+    </div>
+}
+@if (ViewData["Error"].ToString() == "del_success")
+{
+    <div class="alert alert-success alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Запись успешно удалена.
+    </div>
+}
+@if (ViewData["Error"].ToString() == "del_fail")
+{
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        Ошибка при удалении записи.
+    </div>
+}
+
+    @*Итоги по выбранному дапазону*@
+    <table>
+        <tr>
+            <td>
+                <dl class="dl-horizontal">
+                    <dt class="text-warning">@(((double)ViewBag.Outputs_Sum).ToString("### ### ### ###.##"))</dt>
+                    <dd>Расходов</dd>
+                    <dt class="text-success">@(((double)ViewBag.Inputs_Sum).ToString("### ### ### ###.##"))</dt>
+                    <dd>Доходов</dd>
+                    @{ double Total = ViewBag.Inputs_Sum - ViewBag.Outputs_Sum;}
+                    @if (Total < 0)
+                    {
+                        <dt class="text-danger">@(Total.ToString("### ### ### ###.##"))</dt>
+                    }
+                    else
+                    {
+                        <dt class="text-success">@(Total.ToString("### ### ### ###.##"))</dt>
+                    }
+                    <dd>Итог</dd>
+                </dl>
+            </td>
+            <td style="padding-left:20px !important">
+                <a href="~/site/reports_pie/?first_day=@ViewData["First_Day"]&last_day=@ViewData["Last_Day"]" class="btn btn-default btn-lg">Подробный отчёт</a>
+            </td>
+
+        </tr>
+    </table>
+    @*Кнопки добавления записей*@
+    <a class="btn btn-warning open_form" data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#add_form" href="/Site/TransactionAdd/?type=out">Новый расход</a>
+    <a class="btn btn-success open_form" data-ajax="true" data-ajax-method="GET" data-ajax-mode="replace" data-ajax-update="#add_form" href="/Site/TransactionAdd/?type=in">Новый доход</a>
+
+    <br /><br />
+
+    @*Места для вставки AJAX*@
+    <div id="add_form"></div>
+    <div class="modal fade" id='modal' style="margin-top:100px"></div>
+
+    @*Списки операций*@
+    <ul class="nav nav-tabs">
+        <li class="active">
+            <a href="#outputs" data-toggle="tab">Расходы</a>
+        </li>
+        <li>
+            <a href="#inputs" data-toggle="tab">Доходы</a>
+        </li>
+    </ul>
+    <div class="tab-content table-content">
+        <div class="tab-pane fade in active" id="outputs">
+            <div class="table-responsive">
+                @ListBuilder(ViewBag.Outputs)
+            </div>
+        </div>
+        <div class="tab-pane fade" id="inputs">
+            <div class="table-responsive">
+                @ListBuilder(ViewBag.Inputs)
+            </div>
+        </div>
+    </div>
+
+    @functions{
+        private HtmlString ListBuilder(IEnumerable<BsonDocument> List)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("<table class='table table-condensed table-hover'>");
+            sb.Append("<tr>");
+            sb.Append("<th style='width:10px; max-width:10px'></th>");
+            sb.Append("<th style='width:10px; max-width:10px'></th>");
+            sb.Append("<th> Дата </th>");
+            sb.Append("<th> Статья </th>");
+            sb.Append("<th> Категория </th>");
+            sb.Append("<th> Описание </th>");
+            sb.Append("<th> Сумма </th>");
+            sb.Append("<th style='width:10px; max-width:10px'></th>");
+            sb.Append("</tr>");
+
+            foreach (var item in List)
+            {
+                sb.Append($"<tr class='filtered' id='{item["_id"]}'>");
+                sb.Append($"<td><a class='open_form' data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#add_form' href='/Site/TransactionEdit/?id={item["_id"]}'><span class='glyphicon glyphicon-edit' style='color:silver;' data-toggle='tooltip' data-placement='top' title='Редактировать'></span></a></td>");
+                sb.Append($"<td><a class='open_form' data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#add_form' href='/Site/TransactionAdd/?type={item["type"]}&category={item["category"]}&subcategory={item["subcategory"]}&text={item["text"]}'><span class='glyphicon glyphicon-plus-sign' style='color:silver;' data-toggle='tooltip' data-placement='top' title='Копировать'></span></a></td>");
+                sb.Append($"<td><nobr>{((DateTime)item["date"]).ToString("dd MMM")}</nobr></td>");
+                sb.Append($"<td>{item["category"]}</td>");
+                sb.Append($"<td>{item["subcategory"]}</td>");
+                sb.Append($"<td>{item["text"]}</td>");
+                sb.Append($"<td>{((double)item["sum"]).ToString("### ### ### ###.##")}</td>");
+                sb.Append($"<td><a data-ajax='true' data-ajax-method='GET' data-ajax-mode='replace' data-ajax-update='#modal' data-toggle='modal' data-target='#modal' href='/Site/TransactionDelForm/?id={item["_id"]}&text={item["text"]}'><span class='glyphicon glyphicon-remove' style='color:silver;' data-toggle='tooltip' data-placement='top' title='Удалить'></span></a></td>");
+                sb.Append("</tr>");
+            }
+
+            sb.Append("</table>");
+            return new HtmlString(sb.ToString());
+        }
+    }
+
+
+
+    @section Scripts
+{
+        @{ await Html.RenderPartialAsync("_AjaxScriptsPartial"); }
+
+        <script>
+            $('.input-group.date.month_picker').datepicker({
+                format: "mm.yyyy",
+                minViewMode: 1,
+                autoclose: true
+            }).change(function () {
+                window.location.href = "?month=" + $('#month_picker').val();
+            });
+            $('.input-group.date.year_picker').datepicker({
+                format: "yyyy",
+                minViewMode: 2,
+                autoclose: true
+            }).change(function () {
+                window.location.href = "?year=" + $('#year_picker').val();
+            });
+            $('#daterange').datepicker({
+                format: "dd.mm.yyyy",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            $("#range_picker").click(function () {
+                var first_day = $("#first_day").val();
+                var last_day = $("#last_day").val();
+                window.location.href = "?first_day=" + first_day + "&last_day=" + last_day;
+            });
+
+
+
+            $("a.open_form").click(function () {
+                $('html, body').animate({
+                    scrollTop: $("#add_form").offset().top - 70
+                }, 100);
+            });
+        </script>
+    }
+
+
